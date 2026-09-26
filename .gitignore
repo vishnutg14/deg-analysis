@@ -6,6 +6,7 @@
 *.Rproj
 *.tar.gz
 *.Rds
+renv/*
 
 # Output files (optional - uncomment if you don't want to track them)
 # *.csv
@@ -16,5 +17,7 @@
 Thumbs.db
 
 # Temporary files
-*~
 *.tmp
+*.log
+*.swp
+*~
