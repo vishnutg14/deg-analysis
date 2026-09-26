@@ -1,0 +1,2 @@
+compare_group	all	up	down	method	threshold
+BEV_vs_CTRL	412	269	143	deseq2	padj<0.05|log2FoldChange>1
