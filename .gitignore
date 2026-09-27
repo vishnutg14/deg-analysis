@@ -6,11 +6,8 @@
 *.Rproj
 *.tar.gz
 *.Rds
-renv/*
-
-# Output files (optional - uncomment if you don't want to track them)
-# *.csv
-# *.png
+renv/
+.Rprofile
 
 # OS files
 .DS_Store
