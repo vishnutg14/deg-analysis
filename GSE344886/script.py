@@ -47,8 +47,32 @@ metadata = metadata.rename(columns=rename_mapping)
 
 metadata["geo"] = metadata["geo"].str.replace('"', '')
 metadata["condition"] = metadata["condition"].str.replace("treatment: ", "").str.strip()
+metadata["condition"] = metadata["condition"].str.replace('"', '').str.strip()
 
 metadata["geo"] = metadata["geo"].astype("category")
 metadata["condition"] = metadata["condition"].astype("category") # Converting metadata category into category
 
 metadata = metadata.set_index("geo") # Changing Index
+
+# Filtering counts
+keep = (counts >= 10).sum(axis=1) >= 3
+counts_filtered = counts.loc[keep]
+
+# Creating DESeq2 object
+dds = DeseqDataSet(
+    counts=counts.T,
+    metadata=metadata,
+    design="~condition"
+)
+
+# Running DESeq2
+dds.deseq2()
+
+stat_res = DeseqStats(dds, contrast=["condition", "bevacizumab-treated", "untreated control"])
+results = stat_res.results_df.copy()
+results = results.sort_values("padj")
+
+# Creating Plots
+# 1. MA Plot
+results["significant"] = (results["padj"] < 0.05) & (results["log2FoldChange"] >= 1) # Getting significant genes
+plt.scatter(results["baseMean"], results["log2FoldChange"])
