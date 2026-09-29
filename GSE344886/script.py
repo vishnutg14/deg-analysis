@@ -1,5 +1,6 @@
 # I want to run the same script as R in the python environment
 
+import os
 import numpy as numpy
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,6 +10,12 @@ from pydeseq2.dds import DeseqDataSet
 from pydeseq2.ds import DeseqStats
 from sklearn.decomposition import PCA
 
+# Folder check
+folder = "python_results"
+if folder not in os.listdir():
+    os.makedirs(folder)
+
+print(15 * "--", "Running Analysis", 15 * "--")
 # Loading counts
 
 counts = pd.read_csv("./GSE344886_GEO_raw_count_6samples.tsv", sep = "\t", index_col = 0)
@@ -101,3 +108,5 @@ plt.legend()
 plt.xlabel("Mean expression")
 plt.ylabel("log2 fold change")
 plt.title("MA Plot", fontweight="bold")
+plt.savefig(os.path.join(folder, "MA_plot.png"))
+plt.close()
