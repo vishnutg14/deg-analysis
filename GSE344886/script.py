@@ -69,10 +69,35 @@ dds = DeseqDataSet(
 dds.deseq2()
 
 stat_res = DeseqStats(dds, contrast=["condition", "bevacizumab-treated", "untreated control"])
+stat_res.summary()
 results = stat_res.results_df.copy()
 results = results.sort_values("padj")
 
 # Creating Plots
 # 1. MA Plot
-results["significant"] = (results["padj"] < 0.05) & (results["log2FoldChange"] >= 1) # Getting significant genes
-plt.scatter(results["baseMean"], results["log2FoldChange"])
+results["significant"] = (results["padj"] < 0.05) & (abs(results["log2FoldChange"]) >= 1) # Getting significant genes
+
+plt.figure(figsize=(8,5))
+plt.scatter(
+    x=results.loc[~results["significant"], "baseMean"],
+    y=results.loc[~results["significant"], "log2FoldChange"],
+    color="grey",
+    s=10,
+    label="Non-significant"
+) # for non=significant genes
+
+plt.scatter(
+    x=results.loc[results["significant"], "baseMean"],
+    y=results.loc[results["significant"], "log2FoldChange"],
+    color="orange",
+    s=10,
+    label="Significant",
+    alpha=0.5
+) # for significant genes
+
+plt.xscale("log") # x-axis in log scale
+plt.axhline(0, linestyle="--", color="k")
+plt.legend()
+plt.xlabel("Mean expression")
+plt.ylabel("log2 fold change")
+plt.title("MA Plot", fontweight="bold")
