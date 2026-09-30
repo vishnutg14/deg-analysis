@@ -1,7 +1,7 @@
 # I want to run the same script as R in the python environment
 
 import os
-import numpy as numpy
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -67,7 +67,7 @@ counts_filtered = counts.loc[keep]
 
 # Creating DESeq2 object
 dds = DeseqDataSet(
-    counts=counts.T,
+    counts=counts_filtered.T,
     metadata=metadata,
     design="~condition"
 )
@@ -80,8 +80,15 @@ stat_res.summary()
 results = stat_res.results_df.copy()
 results = results.sort_values("padj")
 
+# Saving results to python_results folder
+results.to_csv(os.path.join(folder, "deseq_results.csv"))
+
 # Creating Plots
 # 1. MA Plot
+"""
+We could just use the stat_res.plot_MA() function to do so, but I got to know about it later.
+Just to flex, I wrote the entire code to plot it right down here.
+"""
 results["significant"] = (results["padj"] < 0.05) & (abs(results["log2FoldChange"]) >= 1) # Getting significant genes
 
 plt.figure(figsize=(8,5))
@@ -110,3 +117,19 @@ plt.ylabel("log2 fold change")
 plt.title("MA Plot", fontweight="bold")
 plt.savefig(os.path.join(folder, "MA_plot.png"))
 plt.close()
+
+# 2. Creating PCA
+
+norm_counts = dds.layers["normed_counts"]
+log_counts = np.log2(norm_counts + 1)
+
+pca = PCA(n_components=2)
+
+pca_result = pca.fit_transform(log_counts)
+
+pca_df = pd.DataFrame({
+    "PC1": pca_result[:, 0],
+    "PC2": pca_result[:, 1],
+    "names": dds.obs_names,
+    "condition": metadata["condition"].values
+})
