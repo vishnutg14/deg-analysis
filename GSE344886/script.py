@@ -161,3 +161,66 @@ plt.xlabel(f"PC1 ({pca_vst.explained_variance_ratio_[0] * 100:.2f})")
 plt.ylabel(f"PC2 ({pca_vst.explained_variance_ratio_[1] * 100:.2f})")
 plt.savefig(os.path.join(folder, "PCA_vst.png"), bbox_inches="tight")
 plt.close()
+
+# 3. Volcano Plot
+vol_df = results.dropna(subset=["log2FoldChange", "padj"]).copy()
+vol_df["-log10(padj)"] = -np.log10(vol_df["padj"].clip(lower=1e-300))
+
+plt.figure(figsize=(8,6))
+
+non_sig = ~vol_df["significant"] # for non-significant genes
+
+plt.scatter(
+    vol_df.loc[non_sig, "log2FoldChange"],
+    vol_df.loc[non_sig, "-log10(padj)"],
+    color="grey",
+    s=10,
+    alpha=0.5,
+    label="Non-significant"
+)
+
+upreg = (vol_df["significant"]) & (vol_df["log2FoldChange"] > 0)
+
+plt.scatter(
+    vol_df.loc[upreg, "log2FoldChange"],
+    vol_df.loc[upreg, "-log10(padj)"],
+    color="red",
+    s=10,
+    alpha=0.8,
+    label="Up-regulated"
+)
+
+downreg = (vol_df["significant"] & (vol_df["log2FoldChange"] < 0))
+
+plt.scatter(
+    vol_df.loc[downreg, "log2FoldChange"],
+    vol_df.loc[downreg, "-log10(padj)"],
+    color="blue",
+    s=10,
+    alpha=0.8,
+    label="Down-regulated"
+)
+
+# Threshold
+plt.axhline(-np.log10(0.05), linestyle="--", color="k")
+plt.axvline(1, linestyle="--", color="k")
+plt.axvline(-1, linestyle="--", color="k")
+
+plt.xlabel("log2 fold change")
+plt.ylabel("-log10(adjusted p-value)")
+plt.title("Volcano Plot", fontweight="bold")
+plt.legend()
+plt.savefig(os.path.join(folder, "volcano_plot.png"), bbox_inches="tight")
+plt.close()
+
+# Saving upregulated and downregulated gene list to csv
+up_df = vol_df[upreg]
+down_df = vol_df[downreg]
+
+reg_df = pd.concat([up_df, down_df])
+
+reg_df["case"] = ["Up" if x > 0 else "Down" for x in reg_df["log2FoldChange"]]
+
+reg_df = reg_df[["case", "log2FoldChange", "padj", "-log10(padj)"]]
+
+reg_df.to_csv(os.path.join(folder, "regulated_genes.csv"))
