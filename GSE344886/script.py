@@ -133,3 +133,31 @@ pca_df = pd.DataFrame({
     "names": dds.obs_names,
     "condition": metadata["condition"].values
 })
+
+# Plotting PCA
+
+plt.figure(figsize=(8,5))
+sns.scatterplot(data=pca_df, x="PC1", y="PC2", hue="condition", s=100, palette="Set1")
+plt.title("PCA", fontweight="bold")
+plt.xlabel(f"PC1 ({pca.explained_variance_ratio_[0] * 100:.2f}% variance)")
+plt.ylabel(f"PC2 ({pca.explained_variance_ratio_[1] * 100:.2f}% variance)")
+plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
+plt.savefig(os.path.join(folder, "PCA.png"), bbox_inches="tight")
+plt.close()
+
+# Another approach using vst
+dds.vst_fit()
+vst_counts = dds.vst_transform()
+vst_df = pd.DataFrame(vst_counts, index=counts_filtered.T.index, columns=counts_filtered.T.columns)
+pca_vst = PCA(n_components=2)
+pca_values = pca_vst.fit_transform(vst_df)
+pcavst_df = pd.DataFrame(pca_values, columns=["PC1", "PC2"])
+pcavst_df["condition"] = metadata.loc[counts.T.index, "condition"].values
+
+sns.scatterplot(data=pcavst_df, x="PC1", y="PC2", hue="condition", s=100, palette="Set1")
+plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
+plt.title("PCA_vst", fontweight="bold")
+plt.xlabel(f"PC1 ({pca_vst.explained_variance_ratio_[0] * 100:.2f})")
+plt.ylabel(f"PC2 ({pca_vst.explained_variance_ratio_[1] * 100:.2f})")
+plt.savefig(os.path.join(folder, "PCA_vst.png"), bbox_inches="tight")
+plt.close()
