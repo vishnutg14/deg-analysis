@@ -246,3 +246,31 @@ plt.xlabel("Samples")
 plt.ylabel("Genes")
 plt.savefig(os.path.join(folder, "heatmap_top50.png"), bbox_inches="tight")
 plt.close()
+
+# 5. Sample-sample mapping distance
+
+from scipy.spatial.distance import pdist, squareform
+from scipy.cluster.hierarchy import linkage
+
+sample_distances = pdist(vst_counts, metric="euclidean")
+
+# Distance matrix
+distance_df = pd.DataFrame(squareform(sample_distances), index=dds.obs_names, columns=dds.obs_names)
+
+linkage_matrix = linkage(sample_distances, method="complete")
+
+g = sns.clustermap(
+    distance_df,
+    row_linkage=linkage_matrix,
+    col_linkage=linkage_matrix,
+    cmap="Blues",
+    figsize=(8, 8),
+    annot=False,
+    linewidths=0.5,
+    cbar_kws={"label": "Euclidean distance"}
+)
+
+g.fig.suptitle("Sample-to-Sample Distance", y=1.02)
+
+plt.savefig(os.path.join(folder, "sample_distance.png"), bbox_inches="tight")
+plt.close()
