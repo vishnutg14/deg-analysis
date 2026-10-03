@@ -224,3 +224,25 @@ reg_df["case"] = ["Up" if x > 0 else "Down" for x in reg_df["log2FoldChange"]]
 reg_df = reg_df[["case", "log2FoldChange", "padj", "-log10(padj)"]]
 
 reg_df.to_csv(os.path.join(folder, "regulated_genes.csv"))
+
+# Saving up important data
+vst_df.to_csv(os.path.join(folder, "vst_counts.csv"))
+pca_df.to_csv(os.path.join(folder, "PCA_coordinates.csv"), index=False)
+pcavst_df.to_csv(os.path.join(folder, "PCA_VST_coordinates.csv"),index=False)
+
+# 4. Heatmap
+top_genes = (results.dropna(subset=["padj"]).query("significant").sort_values("padj").head(50).index)
+heatmap_data = vst_df.loc[:, top_genes].T
+heatmap_data = heatmap_data.apply(
+    lambda x: (x- x.mean()) / x.std(),
+    axis=1
+) # Z-score normalization
+
+# Plotting Figure
+plt.figure(figsize=(10, 10))
+sns.heatmap(heatmap_data, cmap="vlag", xticklabels=True, yticklabels=True)
+plt.title("Top 50 Significant Genes", fontweight="bold")
+plt.xlabel("Samples")
+plt.ylabel("Genes")
+plt.savefig(os.path.join(folder, "heatmap_top50.png"), bbox_inches="tight")
+plt.close()
