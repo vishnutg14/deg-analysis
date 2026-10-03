@@ -57,7 +57,7 @@ metadata["condition"] = metadata["condition"].str.replace("treatment: ", "").str
 metadata["condition"] = metadata["condition"].str.replace('"', '').str.strip()
 
 metadata["geo"] = metadata["geo"].astype("category")
-metadata["condition"] = metadata["condition"].astype("category") # Converting metadata category into category
+metadata["condition"] = pd.Categorical(metadata["condition"], categories=["untreated control","bevacizumab-treated"]) # Converting metadata category into category
 
 metadata = metadata.set_index("geo") # Changing Index
 
@@ -223,7 +223,11 @@ reg_df["case"] = ["Up" if x > 0 else "Down" for x in reg_df["log2FoldChange"]]
 
 reg_df = reg_df[["case", "log2FoldChange", "padj", "-log10(padj)"]]
 
-reg_df.to_csv(os.path.join(folder, "regulated_genes.csv"))
+genes = pd.read_csv("GSE344886_GEO_BEV_vs_CTRL_DESeq2_all_genes.tsv", sep="\t")
+genes = genes[["transcript_id", "gene_name", "annotation", "chrome"]]
+reg_df = reg_df.reset_index()
+reg_genes_df = pd.merge(reg_df, genes, how="left").set_index("transcript_id")
+reg_genes_df.to_csv(os.path.join(folder, "regulated_genes.csv"))
 
 # Saving up important data
 vst_df.to_csv(os.path.join(folder, "vst_counts.csv"))
