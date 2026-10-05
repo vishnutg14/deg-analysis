@@ -11,7 +11,7 @@ LFC <- 1
 dir.create(OUTDIR, showWarnings = FALSE, recursive = TRUE)
 
 rpkm <- read.csv(INPUT, sep="\t", row.names = 1)
-log_rpkm <- log2(rpkm + 1)
+log_rpkm <- log2(rpkm + 1) # log transform values
 
 colnames(rpkm)
 sample_info <- data.frame(
@@ -20,3 +20,21 @@ sample_info <- data.frame(
   stringsAsFactors = FALSE
 )
 sample_info$group <- factor(sample_info$group, levels = c("Naive", "Allo_02H", "Allo_24H"))
+
+# I don't want to filter anything for now
+
+design <- model.matrix(~0 + group, data=sample_info)
+
+colnames(design) <- levels(sample_info$group)
+
+fit <- lmFit(log_rpkm, design)
+
+contrast_matrix <- makeContrasts(
+  Allo_02H_vs_Naive = Allo_24H - Naive,
+  Allo_24H_vs_Naive = Allo_24H - Naive,
+  Allo_24H_vs_Allo_02H = Allo_24H - Allo_24H,
+  levels = design
+)
+
+fit2 <- contrasts.fit(fit, contrast_matrix)
+fit2 <- eBayes(fit2, trend = TRUE)
