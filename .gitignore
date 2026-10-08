@@ -7,7 +7,6 @@
 *.tar.gz
 *.Rds
 renv/
-.Rprofile
 
 # OS files
 .DS_Store
